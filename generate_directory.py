@@ -266,7 +266,7 @@ def member_card(m: dict, last: bool) -> str:
         for k, v in m["phones"].items()
     )
     email_lines = "<br>".join(
-        f'<span class="sub-lbl">{k}:</span> {v}'
+        f'<span class="sub-lbl">{k}:</span> <a href="mailto:{v}">{v}</a>'
         for k, v in m["emails"].items()
     )
 
