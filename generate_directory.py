@@ -2,7 +2,7 @@
 """
 Kerbel Life Group Directory Generator
 Reads data/data.tsv, downloads photos from Google Drive,
-and produces a self-contained directory.html (one family per page).
+and produces index.html.
 """
 
 import sys
@@ -21,7 +21,6 @@ sys.stdout.reconfigure(encoding="utf-8")
 BASE_DIR   = Path(r"c:\_data\source\zavion-corp\kerbel-dir")
 DATA_FILE  = BASE_DIR / "data" / "data.tsv"
 CACHE_DIR  = BASE_DIR / "images"
-OUTPUT     = BASE_DIR / "directory.html"
 OUTPUT_WEB = BASE_DIR / "index.html"
 
 CACHE_DIR.mkdir(exist_ok=True)
@@ -195,12 +194,9 @@ for row in rows[1:]:          # skip header
     photo_url = clean(row[C_PHOTO])
 
     print(f"\nProcessing: {names or '(no name)'}")
-    photo_print = find_manual_photo(names) if names else None
-    if not photo_print:
-        photo_print = download_photo(photo_url, names) if photo_url else None
-    photo_web = find_manual_photo(names, max_px=1000) if names else None
-    if not photo_web:
-        photo_web = download_photo(photo_url, names) if photo_url else None
+    photo = find_manual_photo(names, max_px=1000) if names else None
+    if not photo:
+        photo = download_photo(photo_url, names) if photo_url else None
 
     # Collect phones, deduplicate
     phones = {}
@@ -219,16 +215,15 @@ for row in rows[1:]:          # skip header
         emails["Her email"] = clean(row[C_EMAIL_HER])
 
     members.append({
-        "names":     names,
-        "address":   clean(row[C_ADDRESS]),
-        "phones":    phones,
-        "emails":    emails,
-        "bday_his":  clean(row[C_BDAY_HIS]),
-        "bday_her":  clean(row[C_BDAY_HER]),
-        "children":  clean(row[C_CHILDREN]),
-        "anniv":     clean(row[C_ANNIV]),
-        "photo":     photo_print,
-        "photo_web": photo_web,
+        "names":    names,
+        "address":  clean(row[C_ADDRESS]),
+        "phones":   phones,
+        "emails":   emails,
+        "bday_his": clean(row[C_BDAY_HIS]),
+        "bday_her": clean(row[C_BDAY_HER]),
+        "children": clean(row[C_CHILDREN]),
+        "anniv":    clean(row[C_ANNIV]),
+        "photo":    photo,
     })
 
 # Sort by last name of whoever is listed first
@@ -252,224 +247,12 @@ PLACEHOLDER_SVG = (
 )
 
 
-def info_row(label: str, value: str) -> str:
-    if not value:
-        return ""
-    return f'<tr><td class="lbl">{label}</td><td class="val">{value}</td></tr>'
-
-
-def member_card(m: dict, last: bool) -> str:
-    photo_src = m["photo"] or PLACEHOLDER_SVG
-
-    phone_lines = "<br>".join(
-        f'<span class="sub-lbl">{k}:</span> {v}'
-        for k, v in m["phones"].items()
-    )
-    email_lines = "<br>".join(
-        f'<span class="sub-lbl">{k}:</span> <a href="mailto:{v}">{v}</a>'
-        for k, v in m["emails"].items()
-    )
-
-    rows_html = "".join([
-        info_row("Address",     m["address"]),
-        info_row("Phone",       phone_lines) if phone_lines else "",
-        info_row("Email",       email_lines) if email_lines else "",
-        info_row("His Birthday",  m["bday_his"]),
-        info_row("Her Birthday",  m["bday_her"]),
-        info_row("Anniversary", m["anniv"]),
-        info_row("Children",    m["children"]),
-    ])
-
-    page_break = "" if last else 'style="page-break-after: always;"'
-
-    return f"""
-    <div class="page" {page_break}>
-      <div class="card">
-        <div class="photo-col">
-          <img src="{photo_src}" alt="Photo of {m['names']}">
-        </div>
-        <div class="info-col">
-          <h2 class="member-name">{m['names'] or '<em>Name not provided</em>'}</h2>
-          <table class="info-table">
-            {rows_html}
-          </table>
-        </div>
-      </div>
-    </div>
-"""
-
-
-CSS = """
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    font-family: Georgia, 'Times New Roman', serif;
-    background: #fff;
-    color: #222;
-  }
-
-  /* ── Cover page ── */
-  .cover {
-    width: 8.5in;
-    height: 11in;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    page-break-after: always;
-    background: #1a3a5c;
-    color: #fff;
-    text-align: center;
-    padding: 1in;
-  }
-  .cover h1  { font-size: 52pt; letter-spacing: 4px; margin-bottom: 0.15in; }
-  .cover h2  { font-size: 26pt; font-weight: normal; margin-bottom: 0.4in; }
-  .cover hr  { width: 4in; border: 1px solid rgba(255,255,255,0.4); margin: 0.3in auto; }
-  .cover p   { font-size: 14pt; opacity: 0.85; }
-
-  /* ── Member pages ── */
-  .page {
-    width: 8.5in;
-    height: 11in;
-    padding: 0.6in 0.7in;
-    display: flex;
-    flex-direction: column;
-  }
-
-  /* page-level header bar */
-  .page::before {
-    content: "Kerbel Life Group";
-    display: block;
-    width: 100%;
-    text-align: center;
-    font-size: 9pt;
-    color: #1a3a5c;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    border-bottom: 1.5px solid #1a3a5c;
-    padding-bottom: 6px;
-    margin-bottom: 0.35in;
-  }
-
-  .card {
-    display: flex;
-    flex-direction: row;
-    gap: 0.45in;
-    flex: 1;
-  }
-
-  /* ── Photo column ── */
-  .photo-col {
-    flex: 0 0 3.3in;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-  }
-  .photo-col img {
-    width: 3.3in;
-    max-height: 4.2in;
-    object-fit: contain;
-    border-radius: 6px;
-    border: 2px solid #ccc;
-    display: block;
-  }
-
-  /* ── Info column ── */
-  .info-col {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    padding-top: 0.1in;
-  }
-
-  h2.member-name {
-    font-size: 22pt;
-    color: #1a3a5c;
-    margin-bottom: 0.25in;
-    line-height: 1.2;
-    border-bottom: 1px solid #ccc;
-    padding-bottom: 0.1in;
-  }
-
-  .info-table {
-    border-collapse: collapse;
-    width: 100%;
-    font-size: 11.5pt;
-    line-height: 1.65;
-  }
-  .info-table tr + tr td { padding-top: 0.08in; }
-
-  td.lbl {
-    font-weight: bold;
-    color: #1a3a5c;
-    white-space: nowrap;
-    vertical-align: top;
-    padding-right: 0.2in;
-    width: 1.4in;
-  }
-  td.val {
-    color: #333;
-    vertical-align: top;
-  }
-  .sub-lbl {
-    font-style: italic;
-    color: #555;
-    font-size: 10.5pt;
-  }
-
-  /* ── Print ── */
-  @media print {
-    body { background: #fff; }
-    .page, .cover { page-break-after: always; }
-    @page { size: letter; margin: 0; }
-  }
-"""
-
-pages_html = "".join(
-    member_card(m, last=(i == len(members) - 1))
-    for i, m in enumerate(members)
-)
-
-html = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kerbel Life Group — Member Directory</title>
-  <style>
-{CSS}
-  </style>
-</head>
-<body>
-
-  <!-- Cover page -->
-  <div class="cover">
-    <h1>KERBEL</h1>
-    <h2>Life Group</h2>
-    <hr>
-    <p>Member Directory &nbsp;·&nbsp; 2026</p>
-  </div>
-
-  {pages_html}
-
-</body>
-</html>
-"""
-
-OUTPUT.write_text(html, encoding="utf-8")
-print(f"\nDone! Print directory written to:\n  {OUTPUT}")
-
-
-# ─── Web version ──────────────────────────────────────────────────────────────
-
 def slug(name: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
 
 
 def web_card(m: dict) -> str:
-    photo_src = m["photo_web"] or PLACEHOLDER_SVG
+    photo_src = m["photo"] or PLACEHOLDER_SVG
     name = m["names"] or "Name not provided"
 
     def phone_item(label, val):
@@ -697,27 +480,6 @@ WEB_CSS = """
   }
 """
 
-WEB_JS = """
-  const input = document.getElementById('search');
-  input.addEventListener('input', () => {
-    const q = input.value.toLowerCase();
-    document.querySelectorAll('.card').forEach(card => {
-      card.classList.toggle('hidden', !card.textContent.toLowerCase().includes(q));
-    });
-    document.querySelectorAll('.alpha-heading').forEach(h => {
-      const next = h.nextElementSibling;
-      const anyVisible = [...h.parentElement.querySelectorAll('.card')].some(
-        c => c.previousElementSibling === h || (() => {
-          let el = c.previousElementSibling;
-          while (el && !el.classList.contains('alpha-heading')) el = el.previousElementSibling;
-          return el === h;
-        })()
-      );
-      // simpler: just check if any sibling card after this heading (before next heading) is visible
-    });
-  });
-"""
-
 web_html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -784,4 +546,4 @@ web_html = f"""<!DOCTYPE html>
 """
 
 OUTPUT_WEB.write_text(web_html, encoding="utf-8")
-print(f"Web directory written to:\n  {OUTPUT_WEB}")
+print(f"\nDone! Directory written to:\n  {OUTPUT_WEB}")
