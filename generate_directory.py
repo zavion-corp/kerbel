@@ -271,8 +271,15 @@ def web_card(m: dict) -> str:
             return ""
         return f'<li><span class="lbl">{label}:</span> {val}</li>'
 
+    def address_item(val):
+        if not val:
+            return ""
+        from urllib.parse import quote
+        href = "https://maps.google.com/?q=" + quote(val)
+        return f'<li><span class="lbl">Address:</span> <a href="{href}" target="_blank">{val}</a></li>'
+
     details = "".join([
-        info_item("Address",      m["address"]),
+        address_item(m["address"]),
         *[phone_item(k, v) for k, v in m["phones"].items()],
         *[email_item(k, v) for k, v in m["emails"].items()],
         info_item("His Birthday", m["bday_his"]),
