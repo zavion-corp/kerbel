@@ -18,11 +18,11 @@ import pillow_heif
 sys.stdout.reconfigure(encoding="utf-8")
 
 # ─── Paths ────────────────────────────────────────────────────────────────────
-BASE_DIR   = Path(r"c:\_data\source\sandbox\kerbel-dir")
+BASE_DIR   = Path(r"c:\_data\source\zavion-corp\kerbel-dir")
 DATA_FILE  = BASE_DIR / "data" / "data.tsv"
 CACHE_DIR  = BASE_DIR / "images"
 OUTPUT     = BASE_DIR / "directory.html"
-OUTPUT_WEB = BASE_DIR / "directory_web.html"
+OUTPUT_WEB = BASE_DIR / "index.html"
 
 CACHE_DIR.mkdir(exist_ok=True)
 
@@ -245,9 +245,9 @@ PLACEHOLDER_SVG = (
     "data:image/svg+xml;base64,"
     + base64.b64encode(b"""<svg xmlns='http://www.w3.org/2000/svg' width='300' height='380'
         viewBox='0 0 300 380'>
-      <rect width='300' height='380' fill='#e8e8e8'/>
-      <circle cx='150' cy='140' r='70' fill='#b0b0b0'/>
-      <ellipse cx='150' cy='310' rx='110' ry='80' fill='#b0b0b0'/>
+      <rect width='300' height='380' fill='#e8eef5'/>
+      <rect x='135' y='60' width='30' height='200' rx='6' fill='#1a3a5c'/>
+      <rect x='75' y='110' width='150' height='30' rx='6' fill='#1a3a5c'/>
     </svg>""").decode()
 )
 
