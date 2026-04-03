@@ -493,6 +493,7 @@ web_html = f"""<!DOCTYPE html>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Kerbel Life Group — Member Directory</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,{base64.b64encode(b"<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='4' fill='#1a3a5c'/><text x='16' y='23' font-family='Arial,sans-serif' font-size='13' font-weight='bold' fill='#fff' text-anchor='middle'>KLG</text></svg>").decode()}">
   <style>{WEB_CSS}</style>
 </head>
 <body>
