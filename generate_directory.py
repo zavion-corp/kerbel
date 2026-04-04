@@ -41,6 +41,13 @@ C_BDAY_HIS   = 9
 C_BDAY_HER   = 10
 C_CHILDREN   = 11
 C_ANNIV      = 13
+C_Q_WHY_JOIN = 14
+C_Q_HOPE     = 15
+C_Q_SERVE    = 16
+C_Q_FACTS    = 17
+C_Q_PRIOR    = 18
+C_Q_COMM     = 19
+C_Q_LEADER   = 20
 C_PHOTO      = 21
 
 
@@ -224,6 +231,13 @@ for row in rows[1:]:          # skip header
         "children": clean(row[C_CHILDREN]),
         "anniv":    clean(row[C_ANNIV]),
         "photo":    photo,
+        "q_why_join": clean(row[C_Q_WHY_JOIN]),
+        "q_hope":     clean(row[C_Q_HOPE]),
+        "q_serve":    clean(row[C_Q_SERVE]),
+        "q_facts":    clean(row[C_Q_FACTS]),
+        "q_prior":    clean(row[C_Q_PRIOR]),
+        "q_comm":     clean(row[C_Q_COMM]),
+        "q_leader":   clean(row[C_Q_LEADER]),
     })
 
 # Sort by last name of whoever is listed first
@@ -288,6 +302,24 @@ def web_card(m: dict) -> str:
         info_item("Children",       m["children"]),
     ])
 
+    SURVEY_QUESTIONS = [
+        ("Why they joined",         m["q_why_join"]),
+        ("Hopes to gain",           m["q_hope"]),
+        ("How to serve",            m["q_serve"]),
+        ("Fun facts",               m["q_facts"]),
+        ("Prior group experience",  m["q_prior"]),
+        ("Community Group interest",m["q_comm"]),
+        ("Leadership experience",   m["q_leader"]),
+    ]
+    survey_items = "".join(
+        f'<li><span class="lbl">{label}:</span> {val}</li>'
+        for label, val in SURVEY_QUESTIONS if val
+    )
+    survey_section = (
+        f'<ul class="survey-answers">{survey_items}</ul>'
+        if survey_items else ""
+    )
+
     return f"""
     <article class="card" id="{slug(name)}">
       <div class="card-photo">
@@ -296,6 +328,7 @@ def web_card(m: dict) -> str:
       <div class="card-info">
         <h2>{name}</h2>
         <ul>{details}</ul>
+        {survey_section}
       </div>
     </article>"""
 
@@ -443,6 +476,19 @@ WEB_CSS = """
   .lbl { font-weight: 600; color: var(--text); }
   .card-info a { color: var(--navy); text-decoration: none; }
   .card-info a:hover { text-decoration: underline; }
+
+  /* ── Survey answers ── */
+  .survey-answers {
+    list-style: none;
+    font-size: 0.88rem;
+    margin-top: 0.75rem;
+    padding-top: 0.6rem;
+    border-top: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.35rem;
+  }
+  .survey-answers li { color: var(--muted); }
 
   /* ── Hidden by search ── */
   .card.hidden { display: none; }
