@@ -40,7 +40,6 @@ C_EMAIL_HER  = 8
 C_BDAY_HIS   = 9
 C_BDAY_HER   = 10
 C_CHILDREN   = 11
-C_MARRIED    = 12
 C_ANNIV      = 13
 C_PHOTO      = 21
 
@@ -223,7 +222,6 @@ for row in rows[1:]:          # skip header
         "bday_his": clean(row[C_BDAY_HIS]),
         "bday_her": clean(row[C_BDAY_HER]),
         "children": clean(row[C_CHILDREN]),
-        "married":  clean(row[C_MARRIED]),
         "anniv":    clean(row[C_ANNIV]),
         "photo":    photo,
     })
@@ -287,7 +285,6 @@ def web_card(m: dict) -> str:
         info_item("His Birthday",   m["bday_his"]),
         info_item("Her Birthday",   m["bday_her"]),
         info_item("Anniversary",    m["anniv"]),
-        info_item("Married",        m["married"]),
         info_item("Children",       m["children"]),
     ])
 
